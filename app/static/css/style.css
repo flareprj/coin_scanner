@@ -1,0 +1,19 @@
+.container{
+    padding: 15px;
+    background-color: #6998bd;
+    border: 1px solid #ccc;
+}
+.header{
+    font-weight:700;
+    color: #fff;
+    padding-bottom: 15px;
+}
+.ext1{
+    padding: 10px 0;
+    margin-bottom: -2px;
+    border: 2px solid #6998bd;
+    background-color: #92ff92;
+}
+.wrong{
+    background-color: #cedce6;
+}
