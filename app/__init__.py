@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import render_template
 from app.app import *
+import sqlite3
 
 app = Flask(__name__)
 
@@ -8,13 +9,15 @@ app = Flask(__name__)
 @app.route('/')
 def index():
 
-    item, nested = open_browser()
-    c = np.concatenate((item, nested), axis=1)
+    item = open_browser()
 
-    print(c)
-    print('----------------------------------')
+    print('--------------item------------------')
+    print(item)
 
-    return render_template('index.html', c=c)
+    createdb(item)
+
+    return render_template('index.html', c=item)
+    #return 'ok'
 
 
 if __name__ == "__main__":

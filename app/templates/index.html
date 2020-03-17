@@ -13,7 +13,6 @@
 
 <div class="container mt-5">
     <div class="row header">
-        <div class="col">#</div>
         <div class="col">Name</div>
         <div class="col">Symbol</div>
         <div class="col">Volume(24h)</div>
@@ -23,19 +22,26 @@
         <div class="col">Exchange</div>
         <div class="col">Link</div>
     </div>
-   {% for item in c %}
-     <div class="row ext1">
-     {% for x in item %}
-         {% if loop.index > 7 or loop.index == 2 %}
-         <div class="col">
-              <a href="{{ x['href'] }}">{{ x['href_text'] }}</a>
-         </div>
-         {% else %}
-             <div class="col">{{ x }}</div>
-         {% endif %}
-     {% endfor %}
-     </div>
-     {% endfor %}
+
+    {% for item in c %}
+    <div class="row ext1">
+        {% for x in item %}
+
+            {% for xx in x %}
+
+            {% if xx is mapping %}
+
+                <div class="col"><a href="{{ xx['href'] }}">{{ xx['href_text'] }}</a></div>
+
+            {% else %}
+             <div class="col">{{ xx }}</div>
+            {% endif %}
+
+        {% endfor %}
+        {% endfor %}
+
+    </div>
+    {% endfor %}
 </div>
 
 
