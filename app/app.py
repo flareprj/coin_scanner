@@ -1,17 +1,17 @@
-# v 0.1
+# v 0.21
+import datetime
 import time
-import numpy as np
 from itertools import islice
 import sqlite3
-
+import schedule
 from selenium import webdriver
 
-options = webdriver.ChromeOptions()
-
+# options = webdriver.ChromeOptions()
+#
 # options.add_argument('--headless')
-options.add_argument('--ignore-certificate-errors')
-options.add_argument('--ignore-ssl-errors')
-driver = webdriver.Chrome(options=options)
+# options.add_argument('--ignore-certificate-errors')
+# options.add_argument('--ignore-ssl-errors')
+# driver = webdriver.Chrome(options=options)
 
 driver = webdriver.Chrome()
 
@@ -47,25 +47,25 @@ def exchange(k):
 
 def init():
     driver.get(url)
-    # time.sleep(3)
+    nested.clear()  # очистили внутренний список
     driver.execute_script("window.scrollTo(0, 1500)")
     driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/div[1]/div[2]/div[3]/ul[1]/li[1]').click()
 
 
 def get_links():
-    init()
+    #init()
     children = [a.get_attribute("href") for a in driver.find_elements_by_xpath(
         '//*[@id="__next"]/div/div[2]/div[1]/div[2]/div[3]/ul[2]/li[1]/div/div[3]/div/table/tbody/tr//div/a[@href]')]
     # Собираем только первые столбцы для перехода по монетам
     # Фильтруем ссылки до нужного количества
     for record in islice(children, quantity):
         driver.get(record)
-        inner(nested)
+        inner()
 
 
-def inner(nested):
+def inner():
     driver.execute_script("window.scrollTo(0, 1500)")
-    # time.sleep(3)
+    time.sleep(1)
     driver.find_element_by_class_name('cmc-tab__detail-market').click()
     driver.find_element_by_class_name('cmc-popover__dropdown > ul > li:nth-child(1)').click()
 
@@ -81,9 +81,13 @@ def inner(nested):
             href_text = driver.find_element_by_class_name(path).text
             nested[i - 1].append({'href': href, 'href_text': href_text})
 
+        nested[i - 1].append(datetime.datetime.today().strftime("%Y-%m-%d-%H.%M.%S"))
+
 
 def open_browser():
+
     init()
+    item.clear()
 
     for i in range(1, quantity + 1):
         item.append([])
@@ -102,32 +106,56 @@ def open_browser():
                 driver.implicitly_wait(5)
                 item[i - 1].append(stale)
 
-    get_links()
-
+    get_links()  # получили внутренний список
+    print('------------------------ITEM-------------------------------')
+    print(item)
+    print('------------------------NESTED-----------------------------')
+    print(nested)
     res = list(zip(item, nested))
+    print('------------------------RESULT-----------------------------')
+    print(res)
+    print('-----------------------------------------------------------')
 
-    return res
+    create_db(res)
 
 
-def createdb(sample):
+def create_db(res):
+
+    print('длина итогового списка')
+    print(len(res))
+
     conn = sqlite3.connect("coins.db")
     cursor = conn.cursor()
 
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS setcoins (name TEXT, symbol TEXT, volume24h TEXT, price TEXT, diff TEXT, type TEXT, exchange TEXT, link TEXT)")  # 9
-
+        "CREATE TABLE IF NOT EXISTS setcoins (name TEXT, symbol TEXT, volume24h TEXT, price TEXT, diff TEXT, type TEXT, exchange TEXT, link TEXT, date TEXT)")  # 10
     elem = []
 
-    for i in range(len(sample)):
+    for i in range(len(res)):
         elem.append([])
-        for y in range(len(sample[i])):
-            for z in range(len(sample[i][y])):
-                if isinstance(sample[i][y][z], dict):
-                    elem[i].append(sample[i][y][z].get('href_text'))
+        for y in range(len(res[i])):
+            for z in range(len(res[i][y])):
+                if isinstance(res[i][y][z], dict):
+                    elem[i].append(res[i][y][z].get('href_text'))
                 else:
-                    elem[i].append(sample[i][y][z])
+                    elem[i].append(res[i][y][z])
 
-        cursor.execute('''INSERT INTO setcoins VALUES(?, ?, ?, ?, ?, ?, ?, ?)''', elem[i])
-        conn.commit()
+        cursor.execute('''INSERT INTO setcoins VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''', elem[i])
 
-    cursor.close()
+    conn.commit()
+    print('завершена запись в базу')
+    elem.clear()
+    print('очистили элементы строки')
+
+    #n = cursor.execute("SELECT COUNT(*) FROM setcoins")
+    #values = n.fetchone()
+
+    # if values[0] >= 4:
+    #     print('terminated!')
+    #     schedule.cancel_job(createdb)
+    #     cursor.close()
+    #     exit()
+
+    #conn.commit()
+
+

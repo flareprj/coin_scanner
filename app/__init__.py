@@ -1,3 +1,4 @@
+import schedule
 from flask import Flask
 from flask import render_template
 from app.app import *
@@ -8,15 +9,27 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
+    #conn = sqlite3.connect("coins.db")
+    #cursor = conn.cursor()
 
-    item = open_browser()
+    #n = cursor.execute("SELECT COUNT(*) FROM setcoins")
+    #values = n.fetchone()
 
-    print('--------------item------------------')
-    print(item)
+    #item = open_browser()
 
-    createdb(item)
+    schedule.every(20).seconds.do(open_browser)
 
-    return render_template('index.html', c=item)
+    while True:
+        schedule.run_pending()
+
+
+    # while values[0] < 4:  # сколько раз будем обновлять часть данных
+    #     schedule.run_pending()
+    #     n = cursor.execute("SELECT COUNT(*) FROM setcoins")
+    #     values = n.fetchone()
+    #     print(values[0])
+
+    #return render_template('index.html', c=item)
     #return 'ok'
 
 
