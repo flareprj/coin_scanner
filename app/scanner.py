@@ -1,19 +1,19 @@
-# v 0.21
+# v 0.3
 import datetime
 import time
 from itertools import islice
 import sqlite3
-import schedule
 from selenium import webdriver
 
-# options = webdriver.ChromeOptions()
-#
-# options.add_argument('--headless')
-# options.add_argument('--ignore-certificate-errors')
-# options.add_argument('--ignore-ssl-errors')
-# driver = webdriver.Chrome(options=options)
+options = webdriver.ChromeOptions()
 
-driver = webdriver.Chrome()
+options.add_argument('--headless')
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--ignore-ssl-errors')
+
+driver = webdriver.Chrome(options=options)
+
+#driver = webdriver.Chrome()
 
 url = 'https://coinmarketcap.com/gainers-losers/'
 
@@ -28,7 +28,7 @@ exchange_2 = ')'
 ex_1 = '>td:nth-child('
 ex_2 = ')>div>a'
 
-quantity = 2  # количество записей
+quantity = 5  # количество записей
 item = []
 nested = []
 
@@ -53,7 +53,6 @@ def init():
 
 
 def get_links():
-    #init()
     children = [a.get_attribute("href") for a in driver.find_elements_by_xpath(
         '//*[@id="__next"]/div/div[2]/div[1]/div[2]/div[3]/ul[2]/li[1]/div/div[3]/div/table/tbody/tr//div/a[@href]')]
     # Собираем только первые столбцы для перехода по монетам
@@ -107,24 +106,12 @@ def open_browser():
                 item[i - 1].append(stale)
 
     get_links()  # получили внутренний список
-    print('------------------------ITEM-------------------------------')
-    print(item)
-    print('------------------------NESTED-----------------------------')
-    print(nested)
     res = list(zip(item, nested))
-    print('------------------------RESULT-----------------------------')
-    print(res)
-    print('-----------------------------------------------------------')
-
     create_db(res)
 
 
 def create_db(res):
-
-    print('длина итогового списка')
-    print(len(res))
-
-    conn = sqlite3.connect("coins.db")
+    conn = sqlite3.connect("coins1.db")
     cursor = conn.cursor()
 
     cursor.execute(
@@ -143,19 +130,30 @@ def create_db(res):
         cursor.execute('''INSERT INTO setcoins VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''', elem[i])
 
     conn.commit()
-    print('завершена запись в базу')
+    #print('завершена запись в базу')
     elem.clear()
-    print('очистили элементы строки')
+    #print('очистили элементы строки')
 
-    #n = cursor.execute("SELECT COUNT(*) FROM setcoins")
-    #values = n.fetchone()
+    n = cursor.execute("SELECT COUNT(*) FROM setcoins")
+    values = n.fetchone()
+    print('текущее количество строк в базе: ', values[0])
 
-    # if values[0] >= 4:
-    #     print('terminated!')
-    #     schedule.cancel_job(createdb)
-    #     cursor.close()
-    #     exit()
 
-    #conn.commit()
+def percent_ex():
+    conn = sqlite3.connect("coins1.db")
+    cursor = conn.cursor()
+    n = cursor.execute("SELECT COUNT(*) FROM setcoins")
+    value1 = n.fetchone()
+    print('Всего строк в базе: ', value1[0])
+    n2 = cursor.execute("SELECT COUNT(DISTINCT exchange) FROM setcoins")
+    value2 = n2.fetchone()
+    print('Количество уникальных бирж без дублей: ', value2[0])
 
+    with conn:
+        x = conn.execute("SELECT exchange, COUNT(DISTINCT name) AS qty FROM setcoins GROUP BY exchange")
+        while True:
+            row = x.fetchone()
+            if row is None:
+                break
+            print(row[0], str(round(row[1]*100/value2[0], 2)) + '%')
 
