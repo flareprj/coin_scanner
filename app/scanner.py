@@ -11,7 +11,7 @@ options.add_argument('--headless')
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--ignore-ssl-errors')
 
-driver = webdriver.Chrome(options=options)
+driver = webdriver.Chrome(executable_path="C:\\Users\\Flare\\PycharmProjects\\scanner\\chromedriver.exe")
 
 #driver = webdriver.Chrome()
 
@@ -63,10 +63,10 @@ def get_links():
 
 
 def inner():
-    driver.execute_script("window.scrollTo(0, 1500)")
-    time.sleep(1)
-    driver.find_element_by_class_name('cmc-tab__detail-market').click()
-    driver.find_element_by_class_name('cmc-popover__dropdown > ul > li:nth-child(1)').click()
+    driver.execute_script("window.scrollTo(0, 1000)")
+    time.sleep(3)
+    driver.find_element_by_class_name('cmc-tabs__header > li:nth-child(2)').click()
+    driver.find_element_by_class_name('cmc-table__cell--sort-by__exchange-name > div > a').click()
 
     for i in range(1):
         nested.append([])
