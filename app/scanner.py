@@ -137,8 +137,9 @@ def create_db(res):
     print('текущее количество строк в базе: ', values[0])
 
 
-def percent_ex():
+def sorting_list():
     s_100 = 0
+    my_list = []
     conn = sqlite3.connect("coins1.db")
     cursor = conn.cursor()
     n = cursor.execute("SELECT COUNT(*) FROM setcoins")
@@ -150,6 +151,7 @@ def percent_ex():
     print('Количество уникальных бирж без дублей: ', value2[0])
     print('-----------------------------------------------')
 
+    # подсчет текущей суммы уникальных бирж
     with conn:
         x = conn.execute("SELECT exchange, COUNT(DISTINCT name) AS qty FROM setcoins GROUP BY exchange")
         while True:
@@ -158,11 +160,16 @@ def percent_ex():
                 break
             s_100 += row[1]
 
+    # расчет процентов
     with conn:
         x = conn.execute("SELECT exchange, COUNT(DISTINCT name) AS qty FROM setcoins GROUP BY exchange")
+        iter = 0
         while True:
             row = x.fetchone()
-            if row is None:
+            if row is None or iter == value2[0]:
                 break
-            print(row[0], str(round(row[1] * 100 / s_100, 2)) + '%' + ' - ' + str(row[1]))
+            my_list.insert(iter, [row[0], round(row[1] * 100 / s_100, 5), row[1]])
+            iter += 1
+
+    return sorted(my_list, key=lambda k: k[1], reverse=True)
 
