@@ -30,7 +30,7 @@ def sorting_list():
         iter = 0
         while True:
             row = x.fetchone()
-            if row is None or iter == value2[0]:
+            if row is None:
                 break
             my_list.insert(iter, [row[0], round(row[1] * 100 / s_100, 5), row[1]])
             iter += 1
