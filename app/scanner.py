@@ -1,9 +1,11 @@
-# v 0.3
+# v 0.32
 import datetime
 import time
 from itertools import islice
 import sqlite3
 from selenium import webdriver
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
 options = webdriver.ChromeOptions()
 
@@ -12,8 +14,6 @@ options.add_argument('--ignore-certificate-errors')
 options.add_argument('--ignore-ssl-errors')
 
 driver = webdriver.Chrome(executable_path="C:\\Users\\Flare\\PycharmProjects\\scanner\\chromedriver.exe")
-
-#driver = webdriver.Chrome()
 
 url = 'https://coinmarketcap.com/gainers-losers/'
 
@@ -28,20 +28,14 @@ exchange_2 = ')'
 ex_1 = '>td:nth-child('
 ex_2 = ')>div>a'
 
-quantity = 5  # количество записей
+quantity = 5  # количество записей из топ списка
 item = []
 nested = []
 
 
-def arr1(p1, p2, p3, p4, i, k):
-    return p1 + str(i) + p2 + p3 + str(k) + p4
-
-
-def link1(p1, p2, p3, p4, p5, i, k):
-    return p1 + str(i) + p2 + p3 + str(k) + p4 + p5
-
-
 def exchange(k):
+    # вывод селекторов из таблицы для теста
+    # print("{}{}{}{}{}{}".format(exchange_1, str(1), exchange_2, ex_1, str(k), ex_2))
     return exchange_1 + str(1) + exchange_2 + ex_1 + str(k) + ex_2
 
 
@@ -63,10 +57,11 @@ def get_links():
 
 
 def inner():
+
     driver.execute_script("window.scrollTo(0, 1000)")
-    time.sleep(3)
+    time.sleep(5)
     driver.find_element_by_class_name('cmc-tabs__header > li:nth-child(2)').click()
-    driver.find_element_by_class_name('cmc-table__cell--sort-by__exchange-name > div > a').click()
+    #driver.find_element_by_class_name('cmc-table__cell--sort-by__exchange-name > div > a').click()
 
     for i in range(1):
         nested.append([])
@@ -87,6 +82,7 @@ def open_browser():
 
     init()
     item.clear()
+    print('массив очищен')
 
     for i in range(1, quantity + 1):
         item.append([])
@@ -106,7 +102,9 @@ def open_browser():
                 item[i - 1].append(stale)
 
     get_links()  # получили внутренний список
+    print("внутренний список получен")
     res = list(zip(item, nested))
+    print("склеили списки")
     create_db(res)
 
 
@@ -130,9 +128,9 @@ def create_db(res):
         cursor.execute('''INSERT INTO setcoins VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''', elem[i])
 
     conn.commit()
-    #print('завершена запись в базу')
+    print('завершена запись в базу')
     elem.clear()
-    #print('очистили элементы строки')
+    print('очистили элементы строки')
 
     n = cursor.execute("SELECT COUNT(*) FROM setcoins")
     values = n.fetchone()
@@ -140,14 +138,17 @@ def create_db(res):
 
 
 def percent_ex():
+    s_100 = 0
     conn = sqlite3.connect("coins1.db")
     cursor = conn.cursor()
     n = cursor.execute("SELECT COUNT(*) FROM setcoins")
     value1 = n.fetchone()
+    print('-----------------------------------------------')
     print('Всего строк в базе: ', value1[0])
     n2 = cursor.execute("SELECT COUNT(DISTINCT exchange) FROM setcoins")
     value2 = n2.fetchone()
     print('Количество уникальных бирж без дублей: ', value2[0])
+    print('-----------------------------------------------')
 
     with conn:
         x = conn.execute("SELECT exchange, COUNT(DISTINCT name) AS qty FROM setcoins GROUP BY exchange")
@@ -155,5 +156,13 @@ def percent_ex():
             row = x.fetchone()
             if row is None:
                 break
-            print(row[0], str(round(row[1]*100/value2[0], 2)) + '%')
+            s_100 += row[1]
+
+    with conn:
+        x = conn.execute("SELECT exchange, COUNT(DISTINCT name) AS qty FROM setcoins GROUP BY exchange")
+        while True:
+            row = x.fetchone()
+            if row is None:
+                break
+            print(row[0], str(round(row[1] * 100 / s_100, 2)) + '%' + ' - ' + str(row[1]))
 

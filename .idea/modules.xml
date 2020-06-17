@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/bs4-coin.iml" filepath="$PROJECT_DIR$/.idea/bs4-coin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/scanner.iml" filepath="$PROJECT_DIR$/.idea/scanner.iml" />
     </modules>
   </component>
 </project>
